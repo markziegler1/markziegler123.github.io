@@ -1,57 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity } from 'react-native';
+import React, { useContext } from 'react';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { WorkoutContext } from './WorkoutContext';
 
 export default function HomeScreen() {
-  const [workoutCategories, setWorkoutCategories] = useState([]);
-  const [newWorkout, setNewWorkout] = useState('');
-  const [timers, setTimers] = useState({});
-  
+  const { workoutLogs } = useContext(WorkoutContext);
 
-  // Add a new workout item to the list
-  const addWorkout = () => {
-    if (newWorkout) {
-      setWorkoutCategories([...workoutCategories, newWorkout]);
-      setTimers({ ...timers, [newWorkout]: 0 });
-      setNewWorkout('');
-    }
-  };
-
-  // Update timers every second
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      const updatedTimers = {};
-      for (const key in timers) {
-        updatedTimers[key] = timers[key] + 1;
-      }
-      setTimers(updatedTimers);
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [timers]);
+  const totalWorkouts = workoutLogs.length;
+  const averageDuration = totalWorkouts === 0 ? 0 : workoutLogs.reduce((acc, log) => acc + (log.duration || 0), 0) / totalWorkouts;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Workout Logbook</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Enter a workout"
-          style={styles.input}
-          value={newWorkout}
-          onChangeText={(text) => setNewWorkout(text)}
-        />
-        <TouchableOpacity style={styles.addButton} onPress={addWorkout}>
-          <Text style={styles.addButtonText}>Add</Text>
-        </TouchableOpacity>
+      <Text style={styles.header}>Workout Logs</Text>
+
+      <View style={styles.statsContainer}>
+        <View style={styles.statCard}>
+          <Text style={styles.statTitle}>Total Workouts</Text>
+          <Text style={styles.statValue}>{totalWorkouts}</Text>
+        </View>
+
+        <View style={styles.statCard}>
+          <Text style={styles.statTitle}>Average Duration</Text>
+          <Text style={styles.statValue}>{averageDuration.toFixed(2)} minutes</Text>
+        </View>
       </View>
+
       <FlatList
-        data={workoutCategories}
-        keyExtractor={(item) => item}
+        data={workoutLogs}
         renderItem={({ item }) => (
-          <View style={styles.workoutItem}>
-            <Text style={styles.workoutText}>{item}</Text>
-            <Text style={styles.timerText}>{timers[item]}s</Text>
+          <View style={styles.card}>
+            <Text style={styles.logDay}>{item.day}</Text>
+            <Text style={styles.logRoutine}>{item.routine}</Text>
+            <Text style={styles.logDuration}>{item.duration} min</Text>
+            <Text style={styles.logTime}>Logged on: {item.time}</Text>
           </View>
         )}
+        keyExtractor={(item, index) => index.toString()}
       />
     </View>
   );
@@ -60,50 +43,79 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#25292e',
+    backgroundColor: '#f4f4f8',
+    paddingTop: 20,
   },
-  heading: {
+  header: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: 'white',
+    marginBottom: 10,
+    textAlign: 'center',
+    color: '#333',
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 4,
-    paddingHorizontal: 12,
-    marginRight: 8,
-  },
-  addButton: {
-    backgroundColor: 'blue',
-    borderRadius: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  addButtonText: {
-    color: 'white',
-  },
-  workoutItem: {
+  statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 4,
-    padding: 12,
-    marginBottom: 8,
+    marginBottom: 15,
+    marginHorizontal: 15,
   },
-  workoutText: {
+  statCard: {
+    flex: 0.48,  // to allow two cards side by side with a bit of spacing
+    backgroundColor: '#FFF',
+    padding: 15,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
+  },
+  statTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    color: '#666',
+    marginBottom: 10,
   },
-  timerText: {
+  statValue: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  card: {
+    backgroundColor: '#fff',
+    marginHorizontal: 15,
+    marginVertical: 5,
+    padding: 15,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
+  },
+  logDay: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  logRoutine: {
+    fontSize: 18,
+    marginTop: 5,
+    color: '#666',
+  },
+  logDuration: {
     fontSize: 16,
+    marginTop: 10,
+    color: '#888',
+  },
+  logTime: {
+    fontSize: 14,
+    marginTop: 5,
+    color: '#aaa',
   },
 });
