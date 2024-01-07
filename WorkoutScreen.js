@@ -1,5 +1,11 @@
+//WorkoutScreen.js
 import React, { useContext, useState } from 'react';
 import { WorkoutContext } from './WorkoutContext';
+import { addDoc, collection, doc } from 'firebase/firestore';
+import {app, database} from './firebase';
+import {useCollection} from 'react-firebase-hooks/firestore';
+import { Picker } from '@react-native-picker/picker'; // or use your preferred picker library
+
 import {
   View,
   Text,
@@ -7,7 +13,6 @@ import {
   TextInput,
   StyleSheet,
   Modal,
-  Button
 } from 'react-native';
 
 const workouts = [
@@ -20,6 +25,7 @@ const workouts = [
   { day: 'Sunday', routine: 'Rest' }
 ];
 
+
 export default function WorkoutScreen() {
   const { workoutLogs, setWorkoutLogs } = useContext(WorkoutContext);
   const [duration, setDuration] = useState('');
@@ -31,16 +37,29 @@ export default function WorkoutScreen() {
     setModalVisible(true);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const currentDate = new Date();
     const currentTime = `${currentDate.getHours()}:${String(currentDate.getMinutes()).padStart(2, '0')}`;
-        setWorkoutLogs(prevLogs => [...prevLogs, {
+
+    const newLog = {
       ...selectedWorkout,
       time: currentTime,
       duration: parseInt(duration),
-    }]);
-    setDuration('');
-    setModalVisible(false);
+    };
+
+    try {
+      // Add new workout log to Firestore
+      await addDoc(collection(database, "workouts"), newLog);
+
+      // Update local state
+      setWorkoutLogs(prevLogs => [...prevLogs, newLog]);
+
+      // Resetting the state
+      setDuration('');
+      setModalVisible(false);
+    } catch (err) {
+      console.error("Error adding document to Firestore: ", err);
+    }
   };
 
   return (

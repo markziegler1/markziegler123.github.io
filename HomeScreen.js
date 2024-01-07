@@ -1,29 +1,51 @@
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { WorkoutContext } from './WorkoutContext';
+import React from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, doc, deleteDoc } from 'firebase/firestore';
+import { database } from './firebase';
 
 export default function HomeScreen() {
-  const { workoutLogs } = useContext(WorkoutContext);
+  const [value, loading, error] = useCollection(collection(database, "workouts"), {
+    snapshotListenOptions: { includeMetadataChanges: true },
+  });
 
-  const totalWorkouts = workoutLogs.length;
+  const workoutLogs = value?.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const totalWorkouts = workoutLogs?.length || 0;
   const averageDuration = totalWorkouts === 0 ? 0 : workoutLogs.reduce((acc, log) => acc + (log.duration || 0), 0) / totalWorkouts;
+
+  const handleDelete = (workoutId) => {
+    Alert.alert(
+      "Delete Workout",
+      "Are you sure you want to delete this workout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Delete", 
+          onPress: async () => {
+            console.log("Deleting workout with ID: ", workoutId);
+            await deleteDoc(doc(database, "workouts", workoutId));
+          }
+        }
+      ]
+    );
+  };
+
+  if (loading) return <Text>Loading...</Text>;
+  if (error) return <Text>Error: {error.message}</Text>;
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Workout Logs</Text>
-
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statTitle}>Total Workouts</Text>
           <Text style={styles.statValue}>{totalWorkouts}</Text>
         </View>
-
         <View style={styles.statCard}>
           <Text style={styles.statTitle}>Average Duration</Text>
           <Text style={styles.statValue}>{averageDuration.toFixed(2)} minutes</Text>
         </View>
       </View>
-
       <FlatList
         data={workoutLogs}
         renderItem={({ item }) => (
@@ -32,14 +54,16 @@ export default function HomeScreen() {
             <Text style={styles.logRoutine}>{item.routine}</Text>
             <Text style={styles.logDuration}>{item.duration} min</Text>
             <Text style={styles.logTime}>Logged on: {item.time}</Text>
+            <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
+              <Text>Delete</Text>
+            </TouchableOpacity>
           </View>
         )}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id}
       />
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -90,6 +114,8 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     shadowColor: "#000",
+    alignItems: 'center',
+    justifyContent: 'space-between',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -118,4 +144,12 @@ const styles = StyleSheet.create({
     marginTop: 5,
     color: '#aaa',
   },
+  deleteButton: {
+    padding: 10,
+    backgroundColor: '#FF5733',
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  
+  
 });

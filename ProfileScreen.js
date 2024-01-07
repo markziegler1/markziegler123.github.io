@@ -1,30 +1,130 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, StyleSheet, Dimensions, Button, ScrollView, Modal } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import { ScrollView } from 'react-native';
-import { Modal, Button } from 'react-native';
+import { saveUserProfileData, loadUserProfileData } from './FirebaseFunctions';
+import { database } from './firebase';
+import { getAuth, signOut } from 'firebase/auth';
+import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
 
-
-export default function ProfileScreen() {
+const ProfileScreen = ({route, navigation, onSignOut}) => {
     const [currentWeight, setCurrentWeight] = useState(76);
     const [goalWeight, setGoalWeight] = useState(85);
     const [currentMuscleMass, setCurrentMuscleMass] = useState(40);
     const [goalMuscleMass, setGoalMuscleMass] = useState(45);
     const [currentFatPercentage, setCurrentFatPercentage] = useState(10);
     const [goalFatPercentage, setGoalFatPercentage] = useState(12);
-
     const [weightHistory, setWeightHistory] = useState([70, 69, 72, 74, 74, 76]);
     const [muscleMassHistory, setMuscleMassHistory] = useState([32, 32.5, 32.8, 34.6, 35.7, 36.9]);
     const [fatPercentageHistory, setFatPercentageHistory] = useState([12, 10.5, 9.5, 10.3, 10.2, 11]);
-
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedGraph, setSelectedGraph] = useState('');
 
-    const [selectedMonths, setSelectedMonths] = useState([]);
+    const auth = getAuth();
+    const db = getFirestore();
+    const currentUser = auth.currentUser;
 
-    const [editingValue, setEditingValue] = useState(null);
+    useEffect(() => {
+        if (currentUser) {
+            const userDocRef = doc(db, 'users', currentUser.uid);
+            getDoc(userDocRef).then(docSnap => {
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    setCurrentWeight(userData.currentWeight);
+                    setGoalWeight(userData.goalWeight);
+                    // Set other state variables based on userData
+                } else {
+                    console.log("No such document!");
+                }
+            }).catch(error => {
+                console.error("Error fetching user data: ", error);
+            });
+        }
+    }, [currentUser]);
 
+  // Safe check for route and params
+  const userId = route?.params?.userId; 
+  const userEmail = route?.params?.email;
 
+    useEffect(() => {
+        // Fetch user data when the screen is loaded
+        const fetchData = async () => {
+            const userData = await loadUserProfileData(userId);
+            if (userData) {
+                setCurrentWeight(userData.currentWeight);
+                setGoalWeight(userData.goalWeight);
+                // Similar settings for other state variables
+            }
+        };
+
+        if (userId) {
+            fetchData();
+        }
+    }, [userId]);
+
+    // Example function to save user data
+const saveUserData = async (userId, data) => {
+    const userDocRef = doc(database, 'users', userId);
+    await setDoc(userDocRef, data);
+};
+
+// Example function to load user data
+const loadUserData = async (userId) => {
+    const userDocRef = doc(database, 'users', userId);
+    const docSnap = await getDoc(userDocRef);
+    if (docSnap.exists()) {
+        return docSnap.data();
+    } else {
+        console.log('No such document!');
+        return null;
+    }
+};
+
+    
+const handleLogoutPrompt = () => {
+    Alert.alert(
+        "Logout",
+        "Are you sure you want to log out?",
+        [
+            {
+                text: "Cancel",
+                style: "cancel"
+            },
+            { 
+                text: "OK", 
+                onPress: onSignOut
+            }
+        ]
+    );
+};
+    useEffect(() => {
+        // Fetch user data when the screen is loaded
+        const fetchData = async () => {
+            const userData = await loadUserProfileData(userId);
+            if (userData) {
+                setCurrentWeight(userData.currentWeight);
+                setGoalWeight(userData.goalWeight);
+            }
+        };
+
+        fetchData();
+    }, [userId]);
+
+    const handleSave = async () => {
+        if (currentUser) {
+            const userDocRef = doc(db, 'users', currentUser.uid);
+            const userData = {
+                currentWeight,
+                goalWeight,
+                // Include other user data fields here
+            };
+            try {
+                await setDoc(userDocRef, userData);
+                Alert.alert('Profile Updated', 'Your profile data has been saved.');
+            } catch (error) {
+                console.error("Error updating user data: ", error);
+            }
+        }
+    };
 
     useEffect(() => {
       setWeightHistory(prev => [...prev, currentWeight]);
@@ -53,11 +153,27 @@ const calculateYAxisLimit = (maxValue) => {
   return maxValue;
 };
 
-
-
+const handleSignOut = () => {
+    signOut(auth).then(() => {
+        navigation.navigate('Login');
+    }).catch((error) => {
+        console.error('Sign Out Error', error);
+    });
+};
 
 return (
   <ScrollView style={styles.container}> 
+  {/* Display user's email */}
+  {userEmail && 
+  <TouchableOpacity onPress={handleLogoutPrompt}>
+  <Text style={styles.userEmail}>Welcome, {userEmail}</Text>
+</TouchableOpacity>
+    }
+     <Button title="Save Profile" onPress={handleSave} />
+
+    {/* Rest of your component */}
+    <Button title="Sign Out" onPress={handleLogoutPrompt} />
+
       <View style={styles.boxContainer}>
           <TouchableOpacity 
               style={styles.box} 
@@ -307,5 +423,11 @@ const styles = StyleSheet.create({
         marginTop: 20,
         marginBottom: 10,
         color: '#333'
+    },
+    userEmail: {
+        color: 'blue',
+        textDecorationLine: 'underline',
     }
 });
+
+export default ProfileScreen;
