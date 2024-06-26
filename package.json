@@ -21,6 +21,7 @@
     "@react-navigation/stack": "^6.3.20",
     "axios": "^1.6.2",
     "expo": "~49.0.13",
+    "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.6.0",
     "firebase": "^10.7.0",
     "react": "18.2.0",
@@ -32,13 +33,12 @@
     "react-native-svg": "^13.14.0",
     "react-native-vector-icons": "^10.0.0",
     "react-native-web": "~0.19.6",
-    "victory-native": "^40.0.2",
-    "expo-splash-screen": "~0.20.5"
+    "victory-native": "^40.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "react-native-svg-transformer": "^1.1.0",
-    "gh-pages": "^5.0.0"
+    "gh-pages": "^5.0.0",
+    "react-native-svg-transformer": "^1.1.0"
   },
   "private": true,
   "homepage": "https://markziegler1.github.io"
