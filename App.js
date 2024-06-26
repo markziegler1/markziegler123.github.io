@@ -8,35 +8,49 @@ import WorkoutScreen from './WorkoutScreen';
 import ProfileScreen from './ProfileScreen';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { WorkoutProvider } from './WorkoutContext';
-import LoginScreen from './LoginScreen'; // Imported from a separate file
+import LoginScreen from './LoginScreen'; 
 
-
+// Opret en ny tab navigator
 const Tab = createBottomTabNavigator();
+
+// Initialize Firebase-godkendelse
 const auth = getAuth(app);
 
 const App = () => {
+  // State til at gemme den aktuelle bruger
   const [currentUser, setCurrentUser] = useState(null);
 
+  // Effekt-hook til at håndtere Firebase-godkendelse
   useEffect(() => {
+    // Ændringer i godkendelsesstatus
     const unsubscribe = onAuthStateChanged(auth, user => {
-      setCurrentUser(user);
+      setCurrentUser(user); // Sæt brugeren den aktuelle bruger
     });
 
-    return unsubscribe; // Cleanup subscription on unmount
+    return unsubscribe;  // Opryd abonnement ved unmount
   }, []);
 
+
+  // Funktion til at håndtere logud
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      await signOut(auth); // Forsøg at logge ud
     } catch (error) {
-      console.error('Error signing out: ', error);
+      console.error('Error signing out: ', error); // Log eventueele fejl
     }
   };
 
 
   return (
-    <WorkoutProvider>
-      <NavigationContainer>
+  // Omslutter hele appen med WorkoutProvider for at give kontekst til alle underkomponenter
+  //   <WorkoutProvider> Omslutter navigationsstrukturen i appen
+  //   <NavigationContainer> Opretter en bundnavigationslinje
+  //   <Tab.Navigator> Viser forskellige skærme baseret på om brugeren er logget ind
+  //   {currentUser ? Hvis brugeren er logget ind, vis disse skærme
+  //   Hvis ingen bruger er logget ind, vis LoginScreen
+ 
+  <WorkoutProvider>
+      <NavigationContainer> 
         <Tab.Navigator>
           {currentUser ? (
             <>

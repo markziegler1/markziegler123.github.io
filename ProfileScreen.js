@@ -6,6 +6,8 @@ import { database } from './firebase';
 import { getAuth, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
 
+
+// State variabler til at gemme brugerens data
 const ProfileScreen = ({route, navigation, onSignOut}) => {
     const [currentWeight, setCurrentWeight] = useState(76);
     const [goalWeight, setGoalWeight] = useState(85);
@@ -19,11 +21,14 @@ const ProfileScreen = ({route, navigation, onSignOut}) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedGraph, setSelectedGraph] = useState('');
 
+    // Firebase auth og firestore referencer
     const auth = getAuth();
     const db = getFirestore();
     const currentUser = auth.currentUser;
 
+    // useEffect til at hente brugerdata fra Firestore
     useEffect(() => {
+        // Henter data for den nuværende bruger
         if (currentUser) {
             const userDocRef = doc(db, 'users', currentUser.uid);
             getDoc(userDocRef).then(docSnap => {
@@ -31,7 +36,7 @@ const ProfileScreen = ({route, navigation, onSignOut}) => {
                     const userData = docSnap.data();
                     setCurrentWeight(userData.currentWeight);
                     setGoalWeight(userData.goalWeight);
-                    // Set other state variables based on userData
+                    // set andre variable her - har ikke implementeret endnu pga PowerPoint plads mangel :)
                 } else {
                     console.log("No such document!");
                 }
@@ -41,18 +46,17 @@ const ProfileScreen = ({route, navigation, onSignOut}) => {
         }
     }, [currentUser]);
 
-  // Safe check for route and params
+  // Sikker tjek for route og params
   const userId = route?.params?.userId; 
   const userEmail = route?.params?.email;
 
     useEffect(() => {
-        // Fetch user data when the screen is loaded
+        // Fetch bruger data når screen er loaded
         const fetchData = async () => {
             const userData = await loadUserProfileData(userId);
             if (userData) {
                 setCurrentWeight(userData.currentWeight);
                 setGoalWeight(userData.goalWeight);
-                // Similar settings for other state variables
             }
         };
 
@@ -61,13 +65,13 @@ const ProfileScreen = ({route, navigation, onSignOut}) => {
         }
     }, [userId]);
 
-    // Example function to save user data
+    // Gemmer brugerdata
 const saveUserData = async (userId, data) => {
     const userDocRef = doc(database, 'users', userId);
     await setDoc(userDocRef, data);
 };
 
-// Example function to load user data
+// Hent brugerdata
 const loadUserData = async (userId) => {
     const userDocRef = doc(database, 'users', userId);
     const docSnap = await getDoc(userDocRef);
@@ -79,7 +83,7 @@ const loadUserData = async (userId) => {
     }
 };
 
-    
+    // Håndtering af log ud prompt
 const handleLogoutPrompt = () => {
     Alert.alert(
         "Logout",
@@ -97,7 +101,7 @@ const handleLogoutPrompt = () => {
     );
 };
     useEffect(() => {
-        // Fetch user data when the screen is loaded
+        // Fetch bruger data når screen er loaded
         const fetchData = async () => {
             const userData = await loadUserProfileData(userId);
             if (userData) {
@@ -109,6 +113,7 @@ const handleLogoutPrompt = () => {
         fetchData();
     }, [userId]);
 
+    // Gem brugerdata
     const handleSave = async () => {
         if (currentUser) {
             const userDocRef = doc(db, 'users', currentUser.uid);
@@ -126,19 +131,23 @@ const handleLogoutPrompt = () => {
         }
     };
 
+    // Opdaterer historisk ændringer i vægt, muskelmasse og fedtprocent
     useEffect(() => {
+        // Tilføjer ny værdi til vægthistorik
       setWeightHistory(prev => [...prev, currentWeight]);
   }, [currentWeight]);
   
   useEffect(() => {
+    // Tilføjer ny værdi til muskelmassehistorik
       setMuscleMassHistory(prev => [...prev, currentMuscleMass]);
   }, [currentMuscleMass]);
   
   useEffect(() => {
+    // Tilføjer ny værdi til fedtprocenthistorik
       setFatPercentageHistory(prev => [...prev, currentFatPercentage]);
   }, [currentFatPercentage]);
 
-  
+  // Viser promot for at indtaste ny værdi
   const promptForValue = (title, currentValue, setter) => {
     Alert.prompt(
         `Enter ${title}`,
@@ -149,21 +158,24 @@ const handleLogoutPrompt = () => {
     );
 };
 
+// Beregner y-aksens grænse for grafer
 const calculateYAxisLimit = (maxValue) => {
   return maxValue;
 };
 
+// Håndtering af log ud
 const handleSignOut = () => {
+    // Logger brugeren ud og navigerer til login screen
     signOut(auth).then(() => {
         navigation.navigate('Login');
     }).catch((error) => {
         console.error('Sign Out Error', error);
     });
 };
-
+// Retunerer komponentens UI
 return (
   <ScrollView style={styles.container}> 
-  {/* Display user's email */}
+  {/* Viser user's email */}
   {userEmail && 
   <TouchableOpacity onPress={handleLogoutPrompt}>
   <Text style={styles.userEmail}>Welcome, {userEmail}</Text>
@@ -171,7 +183,7 @@ return (
     }
      <Button title="Save Profile" onPress={handleSave} />
 
-    {/* Rest of your component */}
+    {}
     <Button title="Sign Out" onPress={handleLogoutPrompt} />
 
       <View style={styles.boxContainer}>
@@ -246,7 +258,7 @@ return (
 
 
 
-      {/* Similarly for muscle mass and fat percentage boxes */}
+      {/* Lignede for muscle mass and fat percentage boxes */}
       <View style={styles.boxContainer}>
           <TouchableOpacity 
               style={styles.box} 
