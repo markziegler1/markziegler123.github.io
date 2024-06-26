@@ -13,7 +13,7 @@ import {
 } from "react-native";
 
 const daysOfWeek = [
-  "Monday",
+  "Mondayyy",
   "Tuesday",
   "Wednesday",
   "Thursday",
