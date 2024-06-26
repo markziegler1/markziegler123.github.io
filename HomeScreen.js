@@ -52,7 +52,7 @@ export default function HomeScreen() {
       <Text style={styles.header}>Workout Logs</Text>
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <Text style={styles.statTitle}>Total Workoutss</Text>
+          <Text style={styles.statTitle}>Total Workouts</Text>
           <Text style={styles.statValue}>{totalWorkouts}</Text>
         </View>
         <View style={styles.statCard}>
